@@ -1,5 +1,9 @@
 <?php
 
+require_once './vendor/autoload.php';
+
+use App\Task;
+
 if (!isset($_COOKIE['is_login'])) {
     header('location: auth.php');
     exit;
@@ -8,10 +12,6 @@ if (isset($_COOKIE['is_login']) and $_COOKIE['is_login'] != 1) {
     header('location: auth.php');
     exit;
 }
-
-require_once './vendor/autoload.php';
-
-use App\Task;
 
 $filter = 'all';
 

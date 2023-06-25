@@ -15,6 +15,7 @@ abstract class Model
     protected string $table;
     protected string $where = '';
     protected string $orderby = '';
+    protected string $join = '';
 
     protected function query($sql): mysqli_result|bool
     {
@@ -53,15 +54,25 @@ abstract class Model
         if (empty($fields)) {
             $keys = '*';
         } else {
-            foreach ($fields as $filed) {
-                if (end($fields) == $filed) {
-                    $keys .= "`" . $filed . "`";
+            $count = count($fields);
+            $i = 0;
+            foreach ($fields as $field) {
+                $as = explode(" as ", $field);
+                if (isset($as[1])) {
+                    $keys .= $as[0] . " as " . $as[1];
                 } else {
-                    $keys .= "`" . $filed . "`, ";
+                    $keys .= $field;
                 }
+                if ($i != $count - 1) {
+                    $keys .= ", ";
+                }
+                $i++;
             }
         }
         $sql = "SELECT $keys FROM `" . $this->table . "`";
+        if (!empty($this->join)) {
+            $sql .= $this->join;
+        }
         if (!empty($this->orderby)) {
             $sql .= $this->orderby;
         }
@@ -157,6 +168,24 @@ abstract class Model
             $sql .= $this->where;
         }
         return $this->query($sql);
+    }
+
+    public function join($table, $first, $second)
+    {
+        $this->join = " INNER JOIN $table ON " . $this->table . "." . $first . " = " . $table . "." . $second;
+        return $this;
+    }
+
+    public function rightJoin($table, $first, $second)
+    {
+        $this->join = " RIGHT JOIN $table ON " . $this->table . "." . $first . " = " . $table . "." . $second;
+        return $this;
+    }
+
+    public function leftJoin($table, $first, $second)
+    {
+        $this->join = " LEFT JOIN $table ON " . $this->table . "." . $first . " = " . $table . "." . $second;
+        return $this;
     }
 }
 
