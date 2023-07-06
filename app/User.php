@@ -21,7 +21,7 @@ class User extends Model
 
     public function isAdmin()
     {
-        $user = $this->find($_COOKIE['user_id']);
+        $user = $this->find($_COOKIE['user_id'])->first();
         return $user['is_admin'] == 1;
     }
 
