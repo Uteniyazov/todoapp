@@ -5,11 +5,21 @@ $page = "tasks";
 require_once '../vendor/autoload.php';
 
 use App\User;
+use App\Task;
 
 if (!(new User)->isAdmin()) {
-    echo "You aren't admin!";
+    header('location: http://localhost:8080/');
     exit;
 }
+
+$user_id = $_GET['user_id'];
+
+if (isset($_GET['user_id'])) {
+    $tasks = (new Task)->where('user_id', '=', $_GET['user_id'])->get();
+} else {
+    $tasks = (new Task())->get();
+}
+
 ?>
 
 <!doctype html>
@@ -28,7 +38,7 @@ if (!(new User)->isAdmin()) {
         include_once('./components/nav.php');
         ?>
         <div class="float-end">
-            <a href="add-task.php" class="btn btn-primary mb-3">
+            <a href=<?= isset($user_id) ? "add-task.php?user_id=$user_id" : "add-task.php" ?> class="btn btn-primary mb-3">
                 Add task
             </a>
         </div>
@@ -39,24 +49,31 @@ if (!(new User)->isAdmin()) {
                     <th scope="col">Title</th>
                     <th scope="col">Status</th>
                     <th scope="col">Created at</th>
-                    <th scope="col">User</th>
+                    <th scope="col">User ID</th>
                     <th scope="col">Action</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <th scope="row">1</th>
-                    <td>Kofe demlew</td>
-                    <td>Progress</td>
-                    <td>2023-07-09</td>
-                    <td>Izzet</td>
-                    <td>
-                        <form action="delete.php" method="post">
-                            <input type="hidden" name="id" value="1">
-                            <input type="submit" value="Delete" class="btn btn-danger">
-                        </form>
-                    </td>
-                </tr>
+                <?php
+                foreach ($tasks as $task) {
+                ?>
+                    <tr>
+                        <th scope="row"><?= $task['id'] ?></th>
+                        <td><?= $task['task'] ?></td>
+                        <td><?= $task['finished_at'] === null ? 'Progress' : $task['finished_at'] ?></td>
+                        <td><?= $task['created_at'] ?></td>
+                        <td><?= $task['user_id'] ?></td>
+                        <td>
+                            <form action="/admin/logic/delete.php" method="post">
+                                <input type="hidden" name="id" value="<?= $task['id'] ?>">
+                                <input type="hidden" name="user_id" value="<?= isset($_GET['user_id']) ? $_GET['user_id'] : null ?>">
+                                <input type="submit" value="Delete" class="btn btn-danger" name="delete">
+                            </form>
+                        </td>
+                    </tr>
+                <?php
+                }
+                ?>
             </tbody>
         </table>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>

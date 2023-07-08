@@ -7,9 +7,11 @@ require_once '../vendor/autoload.php';
 use App\User;
 
 if (!(new User)->isAdmin()) {
-    echo "You aren't admin!";
+    header('location: http://localhost:8080/');
     exit;
 }
+
+$users = (new User)->get();
 ?>
 
 <!doctype html>
@@ -38,34 +40,36 @@ if (!(new User)->isAdmin()) {
                     <th scope="col">#</th>
                     <th scope="col">Name</th>
                     <th scope="col">Email</th>
+                    <th scope="col">Role</th>
                     <th scope="col">Action</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <th scope="row">1</th>
-                    <td>Izzet Uteniyazov</td>
-                    <td>izzet@mail.ru</td>
-                    <td>
-                        <form action="delete.php" method="post">
-                            <input type="hidden" name="id" value="1">
-                            <input type="submit" value="Tasks" class="btn btn-success">
-                            <input type="submit" value="Delete" class="btn btn-danger">
-                        </form>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row">2</th>
-                    <td>Pikachu</td>
-                    <td>pika@mail.com</td>
-                    <td>
-                        <form action="delete.php" method="post">
-                            <input type="hidden" name="id" value="1">
-                            <input type="submit" value="Tasks" class="btn btn-success">
-                            <input type="submit" value="Delete" class="btn btn-danger">
-                        </form>
-                    </td>
-                </tr>
+                <?php
+                foreach ($users as $user) {
+                ?>
+                    <tr>
+                        <th scope="row"><?= $user['id'] ?></th>
+                        <td><?= $user['name'] ?></td>
+                        <td><?= $user['email'] ?></td>
+                        <td><?= $user['is_admin'] == 1 ? 'Admin' : 'User' ?></td>
+                        <td>
+                            <form action="/admin/logic/delete.php" method="post">
+                                <input type="hidden" name="id" value="<?= $user['id'] ?>">
+                                <input type="submit" value="Tasks" class="btn btn-success" name="button">
+                                <?php
+                                if ($user['id'] != $_COOKIE['user_id']) {
+                                ?>
+                                    <input type="submit" value="Delete" class="btn btn-danger" name="button">
+                                <?php
+                                }
+                                ?>
+                            </form>
+                        </td>
+                    </tr>
+                <?php
+                }
+                ?>
             </tbody>
         </table>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>

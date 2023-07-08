@@ -7,7 +7,7 @@ require_once '../vendor/autoload.php';
 use App\User;
 
 if (!(new User)->isAdmin()) {
-    echo "You aren't admin!";
+    header('location: http://localhost:8080/');
     exit;
 }
 ?>
