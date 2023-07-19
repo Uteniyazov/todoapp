@@ -12,14 +12,30 @@ if (!(new User)->isAdmin()) {
     exit;
 }
 
-$user_id = $_GET['user_id'];
-
+$user_id = isset($_GET['user_id']) ? $_GET['user_id'] : null;
+$tasks = (new Task)->join('users', 'user_id', 'id')->OrderBy('id', 'asc');
 if (isset($_GET['user_id'])) {
-    $tasks = (new Task)->where('user_id', '=', $_GET['user_id'])->get();
-} else {
-    $tasks = (new Task())->get();
+    $tasks = $tasks->where('user_id', '=', $_GET['user_id']);
 }
+$page = 1;
+$per_page = 10;
+if (isset($_GET['page'])) {
+    $page = $_GET['page'];
+}
+$tasks = $tasks
+    ->select(
+        'tasks.id',
+        'users.id as user_id',
+        'tasks.task',
+        'tasks.created_at',
+        'tasks.finished_at',
+        'users.name',
+    )
+    ->pagination($per_page, $page);
 
+[$total, $tasks] = $tasks;
+// print_r($tasks);
+// exit;
 ?>
 
 <!doctype html>
@@ -42,6 +58,17 @@ if (isset($_GET['user_id'])) {
                 Add task
             </a>
         </div>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination">
+                <?php
+                for ($i = 1; $i <= ceil($total / $per_page); $i++) {
+                ?>
+                    <li class="page-item <?= $i == $page ? 'active' : '' ?>"><a class="page-link" href="tasks.php<?= isset($user_id) ? "?user_id=" . "$user_id&" : '?' ?><?= "page=" . "$i" ?>"><?= $i ?></a></li>
+                <?php
+                }
+                ?>
+            </ul>
+        </nav>
         <table class="table table-dark table-striped">
             <thead>
                 <tr>
@@ -49,7 +76,7 @@ if (isset($_GET['user_id'])) {
                     <th scope="col">Title</th>
                     <th scope="col">Status</th>
                     <th scope="col">Created at</th>
-                    <th scope="col">User ID</th>
+                    <th scope="col">User name</th>
                     <th scope="col">Action</th>
                 </tr>
             </thead>
@@ -62,11 +89,13 @@ if (isset($_GET['user_id'])) {
                         <td><?= $task['task'] ?></td>
                         <td><?= $task['finished_at'] === null ? 'Progress' : $task['finished_at'] ?></td>
                         <td><?= $task['created_at'] ?></td>
-                        <td><?= $task['user_id'] ?></td>
+                        <td><?= $task['name'] ?></td>
                         <td>
                             <form action="/admin/logic/delete.php" method="post">
                                 <input type="hidden" name="id" value="<?= $task['id'] ?>">
                                 <input type="hidden" name="user_id" value="<?= isset($_GET['user_id']) ? $_GET['user_id'] : null ?>">
+                                <input type="hidden" name="task_id" value="<?= $task['id'] ?>">
+                                <input type="submit" value="Edit" class="btn btn-success" name="delete">
                                 <input type="submit" value="Delete" class="btn btn-danger" name="delete">
                             </form>
                         </td>

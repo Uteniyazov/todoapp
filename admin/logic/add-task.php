@@ -23,7 +23,7 @@ if (empty($_POST['user_id'])) {
 }
 
 $user_id = $_POST['user_id'];
-(new Task)->create([
+(new Task())->create([
     'task' => $_POST['title'],
     'created_at' => date('Y-m-d H:i:s'),
     'user_id' => $user_id,

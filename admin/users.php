@@ -11,7 +11,21 @@ if (!(new User)->isAdmin()) {
     exit;
 }
 
-$users = (new User)->get();
+$users = (new User)->OrderBy('id', 'desc');
+$page = 1;
+$per_page = 10;
+if (isset($_GET['page'])) {
+    $page = $_GET['page'];
+}
+$users = $users
+    ->select(
+        'users.id',
+        'users.name',
+        'users.email',
+        'users.is_admin'
+    )
+    ->pagination($per_page, $page);
+[$total, $users] = $users;
 ?>
 
 <!doctype html>
@@ -34,6 +48,17 @@ $users = (new User)->get();
                 New User as admin
             </a>
         </div>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination">
+                <?php
+                for ($i = 1; $i <= ceil($total / $per_page); $i++) {
+                ?>
+                    <li class="page-item <?= $i == $page ? 'active' : '' ?>"><a class="page-link" href="users.php?page=<?= $i ?>"><?= $i ?></a></li>
+                <?php
+                }
+                ?>
+            </ul>
+        </nav>
         <table class="table table-dark table-striped">
             <thead>
                 <tr>

@@ -16,6 +16,7 @@ abstract class Model
     protected string $where = '';
     protected string $orderby = '';
     protected string $join = '';
+    protected string $select = '';
 
     protected function query($sql): mysqli_result|bool
     {
@@ -48,36 +49,19 @@ abstract class Model
         return $this->query($sql);
     }
 
-    public function get(...$fields): array
+    public function get(...$fields)
     {
-        $keys = '';
-        if (empty($fields)) {
-            $keys = '*';
-        } else {
-            $count = count($fields);
-            $i = 0;
-            foreach ($fields as $field) {
-                $as = explode(" as ", $field);
-                if (isset($as[1])) {
-                    $keys .= $as[0] . " as " . $as[1];
-                } else {
-                    $keys .= $field;
-                }
-                if ($i != $count - 1) {
-                    $keys .= ", ";
-                }
-                $i++;
-            }
-        }
-        $sql = "SELECT $keys FROM `" . $this->table . "`";
+        $this->select(...$fields);
+        $sql = "SELECT " . $this->select . " FROM `" . $this->table . "`";
+
         if (!empty($this->join)) {
             $sql .= $this->join;
         }
-        if (!empty($this->orderby)) {
-            $sql .= $this->orderby;
-        }
         if (!empty($this->where)) {
             $sql .= $this->where;
+        }
+        if (!empty($this->orderby)) {
+            $sql .= $this->orderby;
         }
         $data = $this->query($sql);
         $final = [];
@@ -187,7 +171,51 @@ abstract class Model
         $this->join = " LEFT JOIN $table ON " . $this->table . "." . $first . " = " . $table . "." . $second;
         return $this;
     }
+    public function select(...$fields)
+    {
+        $keys = '';
+        if (empty($fields)) {
+            $keys = '*';
+        } else {
+            $count = count($fields);
+            $i = 0;
+            foreach ($fields as $field) {
+                $as = explode(" as ", $field);
+                if (isset($as[1])) {
+                    $keys .= $as[0] . " as " . $as[1];
+                } else {
+                    $keys .= $field;
+                }
+                if ($i != $count - 1) {
+                    $keys .= ", ";
+                }
+                $i++;
+            }
+        }
+        $this->select = $keys;
+        return $this;
+    }
+    public function pagination($per_page, $page)
+    {
+        $sql = "SELECT " . $this->select . " FROM `" . $this->table . "`";
+        if (!empty($this->join)) {
+            $sql .= $this->join;
+        }
+        if (!empty($this->where)) {
+            $sql .= $this->where;
+        }
+        if (!empty($this->orderby)) {
+            $sql .= $this->orderby;
+        }
+        $offset = ($page - 1) * $per_page;
+        $data = $this->query($sql);
+        $total = $data->num_rows;
+        $sql .= " LIMIT $per_page OFFSET $offset";
+        $data = $this->query($sql);
+        $final = [];
+        while ($row = $data->fetch_assoc()) {
+            $final[] = $row;
+        }
+        return [$total, $final];
+    }
 }
-
-
-//SELECT * FROM tasks INNER JOIN users ON tasks.user_id = users.id
