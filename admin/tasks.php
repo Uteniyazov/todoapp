@@ -7,13 +7,19 @@ require_once '../vendor/autoload.php';
 use App\User;
 use App\Task;
 
+$sort = isset($_GET['sort']) ? $_GET['sort'] : null;
+$type = isset($_GET['type']) ? $_GET['type'] : null;
+
+$from = isset($_GET['from']) ? $_GET['from'] : null;
+$to = isset($_GET['to']) ? $_GET['to'] : null;
+
 if (!(new User)->isAdmin()) {
     header('location: http://localhost:8080/');
     exit;
 }
 
 $user_id = isset($_GET['user_id']) ? $_GET['user_id'] : null;
-$tasks = (new Task)->join('users', 'user_id', 'id')->OrderBy('id', 'asc');
+$tasks = (new Task)->join('users', 'user_id', 'id');
 if (isset($_GET['user_id'])) {
     $tasks = $tasks->where('user_id', '=', $_GET['user_id']);
 }
@@ -30,8 +36,15 @@ $tasks = $tasks
         'tasks.created_at',
         'tasks.finished_at',
         'users.name',
-    )
-    ->pagination($per_page, $page);
+    );
+if ($sort and $type) {
+    $tasks = $tasks->OrderBy($sort, $type);
+}
+if ($from and $to) {
+    $tasks = $tasks->where("date(created_at)", '>=', $from)->where("date(created_at)", '<=', $to);
+}
+
+$tasks = $tasks->pagination($per_page, $page);
 
 [$total, $tasks] = $tasks;
 // print_r($tasks);
@@ -53,29 +66,37 @@ $tasks = $tasks
         <?php
         include_once('./components/nav.php');
         ?>
-        <div class="float-end">
-            <a href=<?= isset($user_id) ? "add-task.php?user_id=$user_id" : "add-task.php" ?> class="btn btn-primary mb-3">
-                Add task
-            </a>
+        <div class="d-flex justify-content-between">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination">
+                    <?php
+                    for ($i = 1; $i <= ceil($total / $per_page); $i++) {
+                    ?>
+                        <li class="page-item <?= $i == $page ? 'active' : '' ?>"><a class="page-link" href="tasks.php<?= isset($user_id) ? "?user_id=" . "$user_id&" : '?' ?><?= "page=" . "$i" ?>"><?= $i ?></a></li>
+                    <?php
+                    }
+                    ?>
+                </ul>
+            </nav>
+            <form action="tasks.php" method="GET">
+                <input type="date" name="from" class="form-control" value="<?= $from ?>">
+                <input type="date" name="to" class="form-control" value="<?= $to ?>">
+                <input class="btn btn-success form-control" type="submit" value="Submit">
+            </form>
+            <div>
+                <a href=<?= isset($user_id) ? "add-task.php?user_id=$user_id" : "add-task.php" ?> class="btn btn-primary mb-3">
+                    Add task
+                </a>
+            </div>
         </div>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination">
-                <?php
-                for ($i = 1; $i <= ceil($total / $per_page); $i++) {
-                ?>
-                    <li class="page-item <?= $i == $page ? 'active' : '' ?>"><a class="page-link" href="tasks.php<?= isset($user_id) ? "?user_id=" . "$user_id&" : '?' ?><?= "page=" . "$i" ?>"><?= $i ?></a></li>
-                <?php
-                }
-                ?>
-            </ul>
-        </nav>
+
         <table class="table table-dark table-striped">
             <thead>
                 <tr>
-                    <th scope="col">#</th>
+                    <th scope="col"><a href="tasks.php?sort=id&type=<?= $type == 'asc' ? 'desc' : 'asc' ?>&from=<?= $from ?>&to=<?= $to ?>">#</a></th>
                     <th scope="col">Title</th>
                     <th scope="col">Status</th>
-                    <th scope="col">Created at</th>
+                    <th scope="col"><a href="tasks.php?sort=created_at&type=<?= $type == 'asc' ? 'desc' : 'asc' ?>&from=<?= $from ?>&to=<?= $to ?>">Created at</a></th>
                     <th scope="col">User name</th>
                     <th scope="col">Action</th>
                 </tr>

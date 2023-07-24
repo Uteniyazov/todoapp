@@ -10,8 +10,10 @@ if (!(new User)->isAdmin()) {
     header('location: http://localhost:8080/');
     exit;
 }
+$sort = isset($_GET['sort']) ? $_GET['sort'] : null;
+$type = isset($_GET['type']) ? $_GET['type'] : null;
 
-$users = (new User)->OrderBy('id', 'desc');
+$users = (new User);
 $page = 1;
 $per_page = 10;
 if (isset($_GET['page'])) {
@@ -23,8 +25,14 @@ $users = $users
         'users.name',
         'users.email',
         'users.is_admin'
-    )
-    ->pagination($per_page, $page);
+    );
+
+if ($sort and $type) {
+    $users = $users->OrderBy($sort, $type);
+}
+
+$users = $users->pagination($per_page, $page);
+
 [$total, $users] = $users;
 ?>
 
@@ -62,7 +70,7 @@ $users = $users
         <table class="table table-dark table-striped">
             <thead>
                 <tr>
-                    <th scope="col">#</th>
+                    <th scope="col"><a href="users.php?sort=id&type=<?= $type == 'asc' ? 'desc' : 'asc' ?>">#</a></th>
                     <th scope="col">Name</th>
                     <th scope="col">Email</th>
                     <th scope="col">Role</th>
@@ -85,7 +93,7 @@ $users = $users
                                 <?php
                                 if ($user['id'] != $_COOKIE['user_id']) {
                                 ?>
-                                    <input type="submit" value="Delete" class="btn btn-danger" name="button">
+                                    <input onclick="return confirm('Are you sure?')" type="submit" value="Delete" class="btn btn-danger" name="button">
                                 <?php
                                 }
                                 ?>

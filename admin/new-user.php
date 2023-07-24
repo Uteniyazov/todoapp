@@ -46,11 +46,18 @@ if (!(new User)->isAdmin()) {
                 <label for="email" class="form-label">Email address</label>
                 <input type="email" class="form-control" id="email" placeholder="Email..." name="email">
             </div>
-            <div class="col-6 mb-3">
+            <div class="col-4 mb-3">
                 <label for="password" class="form-label">Password</label>
                 <input type="password" class="form-control" id="password" placeholder="Password..." name="password">
             </div>
-            <div class="col-6 mb-3 ">
+            <div class="col-4 mb-3">
+                <label for="role" class="form-label">Role</label>
+                <select name="role" id="role" class="form-control">
+                    <option value="admin">Admin</option>
+                    <option value="user">User</option>
+                </select>
+            </div>
+            <div class="col-4 mb-3 ">
                 <label class="form-label">Submit</label>
                 <div class="d-grid">
                     <input type="submit" class="btn btn-primary" value="Submit">

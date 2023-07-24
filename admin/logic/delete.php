@@ -21,7 +21,7 @@ if ($_POST['button'] == 'Delete') {
     exit;
 }
 
-if ($_POST['delete'] == 'Delete') {
+if ($_POST['delete'] == 'Delete' or $_POST['button'] == 'Delete') {
     if (isset($_POST['id'])) {
         (new Task())->where('id', '=', $_POST['id'])->delete();
         header('location: ../tasks.php');

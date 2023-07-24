@@ -74,9 +74,9 @@ abstract class Model
     public function where(string $column, string $operator, mixed $value): static
     {
         if (empty($this->where)) {
-            $this->where .= " WHERE `$column` $operator " . $this->value($value) . " ";
+            $this->where .= " WHERE $column $operator " . $this->value($value) . " ";
         } else {
-            $this->where .= "AND `$column` $operator " . $this->value($value) . " ";
+            $this->where .= "AND $column $operator " . $this->value($value) . " ";
         }
         return $this;
     }

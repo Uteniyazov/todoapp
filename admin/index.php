@@ -5,11 +5,46 @@ $page = "index";
 require_once '../vendor/autoload.php';
 
 use App\User;
+use App\Task;
 
 if (!(new User)->isAdmin()) {
     header('location: http://localhost:8080/');
     exit;
 }
+$users_page = 1;
+$tasks_page = 1;
+$per_page = 2;
+if (isset($_GET['users_page'])) {
+    $users_page = $_GET['users_page'];
+}
+if (isset($_GET['tasks_page'])) {
+    $tasks_page = $_GET['tasks_page'];
+}
+$users = (new User)
+    ->select(
+        'id',
+        'name',
+        'email',
+        'is_admin',
+    )->pagination($per_page, $users_page);
+
+[$users_total, $users] = $users;
+
+$tasks = (new Task)
+    ->join('users', 'user_id', 'id')
+    // ->where('finished_at', '=', null)
+    ->select(
+        'tasks.id',
+        'users.id as user_id',
+        'tasks.task',
+        'tasks.created_at',
+        'tasks.finished_at',
+        'users.name',
+    )->pagination($per_page, $tasks_page);
+
+[$tasks_total, $tasks] = $tasks;
+// print_r($tasks_total);
+// exit;
 ?>
 
 <!doctype html>
@@ -37,7 +72,7 @@ if (!(new User)->isAdmin()) {
                         <div class="col-md-8">
                             <div class="card-body">
                                 <h5 class="card-title">Users count</h5>
-                                <p class="card-text">90</p>
+                                <p class="card-text"><?= $users_total ?></p>
                             </div>
                         </div>
                     </div>
@@ -52,7 +87,7 @@ if (!(new User)->isAdmin()) {
                         <div class="col-md-8">
                             <div class="card-body">
                                 <h5 class="card-title">Tasks count</h5>
-                                <p class="card-text">90</p>
+                                <p class="card-text"><?= $tasks_total ?></p>
                             </div>
                         </div>
                     </div>
@@ -82,7 +117,7 @@ if (!(new User)->isAdmin()) {
                         <div class="col-md-8">
                             <div class="card-body">
                                 <h5 class="card-title">Progress tasks count</h5>
-                                <p class="card-text">90</p>
+                                <p class="card-text">0</p>
                             </div>
                         </div>
                     </div>

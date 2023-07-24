@@ -9,6 +9,12 @@ if (!(new User)->isAdmin()) {
     header('location: http://localhost:8080/');
     exit;
 }
+$users_sort = isset($_GET['users_sort']) ? $_GET['users_sort'] : null;
+$users_type = isset($_GET['users_type']) ? $_GET['users_type'] : null;
+
+$tasks_sort = isset($_GET['tasks_sort']) ? $_GET['tasks_sort'] : null;
+$tasks_type = isset($_GET['tasks_type']) ? $_GET['tasks_type'] : null;
+
 $users_page = 1;
 $tasks_page = 1;
 $per_page = 2;
@@ -19,7 +25,6 @@ if (isset($_GET['tasks_page'])) {
     $tasks_page = $_GET['tasks_page'];
 }
 $users = (new User)
-    ->OrderBy('id', 'desc')
     ->where('name', 'LIKE', "%" . $_GET['search'] . "%")
     ->orWhere('email', 'LIKE', "%" . $_GET['search'] . "%")
     ->select(
@@ -27,13 +32,18 @@ $users = (new User)
         'name',
         'email',
         'is_admin',
-    )->pagination($per_page, $users_page);
+    );
+
+if ($users_sort and $users_type) {
+    $users = $users->OrderBy($users_sort, $users_type);
+}
+
+$users = $users->pagination($per_page, $users_page);
 
 [$users_total, $users] = $users;
 
 $tasks = (new Task)
     ->join('users', 'user_id', 'id')
-    ->OrderBy('created_at', 'desc')
     ->where('task', 'LIKE', "%" . $_GET['search'] . "%")
     ->select(
         'tasks.id',
@@ -42,7 +52,14 @@ $tasks = (new Task)
         'tasks.created_at',
         'tasks.finished_at',
         'users.name',
-    )->pagination($per_page, $tasks_page);
+    );
+
+if ($tasks_sort and $tasks_type) {
+    $tasks = $tasks->OrderBy($tasks_sort, $tasks_type);
+}
+
+$tasks = $tasks->pagination($per_page, $tasks_page);
+
 [$tasks_total, $tasks] = $tasks;
 ?>
 
@@ -76,7 +93,7 @@ $tasks = (new Task)
         <table class="table table-dark table-striped">
             <thead>
                 <tr>
-                    <th scope="col">#</th>
+                    <th scope="col"><a href="search.php?users_sort=id&users_type=<?= $users_type == 'asc' ? 'desc' : 'asc' ?>">#</a></th>
                     <th scope="col">Name</th>
                     <th scope="col">Email</th>
                     <th scope="col">Role</th>
@@ -122,7 +139,7 @@ $tasks = (new Task)
         <table class="table table-dark table-striped">
             <thead>
                 <tr>
-                    <th scope="col">#</th>
+                    <th scope="col"><a href="search.php?tasks_sort=id&tasks_type=<?= $tasks_type == 'asc' ? 'desc' : 'asc' ?>">#</a></th>
                     <th scope="col">Title</th>
                     <th scope="col">Status</th>
                     <th scope="col">Created at</th>
